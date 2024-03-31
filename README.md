@@ -12,7 +12,7 @@ APP CONFIGURATION -
 2. use the method cookieParser() on its own and not express.cookieParser()
 3. Set environment variable CORS = \* (for now)
 4. Async handler in utils ie
-<!--
+
 const asyncHandler = (fn) = async (req,res,next) => {
 try{
 await fn(req,res,next)
@@ -23,4 +23,4 @@ success: false,
 message: err.message
 })
 }
-} -->
+}
