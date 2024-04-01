@@ -18,8 +18,8 @@ app.use(express.urlencoded({
     extended: true, limit: "16kb"
 }))
 
-app.use(express.static("public")) //For any other files like images etc, name should be in root dir
+app.use(express.static("public")) //For any other files like images etc, same name folder must be created in root dir
 
-app.use(cookieParser())
+app.use(cookieParser()) //cookieParser() populates req.cookies, which will be available in json
 
 export default app
