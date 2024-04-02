@@ -22,4 +22,9 @@ app.use(express.static("public")) //For any other files like images etc, same na
 
 app.use(cookieParser()) //cookieParser() populates req.cookies, which will be available in json
 
+// ----------------------------------------------------------------------------------------------------------------
+
+import { userRouter } from "./routes/user.routes.js";
+app.use("api/v1/user", userRouter)
+
 export default app
