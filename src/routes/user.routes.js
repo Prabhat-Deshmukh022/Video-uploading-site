@@ -5,4 +5,4 @@ const userRouter = Router()
 
 userRouter.route("/register").post(registerUser)
 
-export {userRouter}
+export default userRouter
