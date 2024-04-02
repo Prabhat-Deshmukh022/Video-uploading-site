@@ -53,7 +53,7 @@ userSchema.pre("save", async function(next){
 
     salt = bcryptjs.genSaltSync(10);
 
-    this.password = bcryptjs.hash(this.password, salt)
+    this.password = await bcryptjs.hash(this.password, salt)
     next()
 })
 
