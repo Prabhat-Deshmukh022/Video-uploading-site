@@ -1,18 +1,25 @@
 import { Router } from "express";
 import registerUser from "../controllers/user.controller.js";
 import { upload } from "../middlewares/multer.js";
+import asyncHandler from "../utils/asyncHandler.js";
 
-const userRouter = Router()
+const router = Router()
 
-userRouter.route("/register").post(
-    upload.fields({
+router.route('/register').post(upload.fields([
+    {
         name: "avatar",
         maxCount: 1
-    },
+    }, 
     {
         name: "coverImage",
         maxCount: 1
-    })
-    ,registerUser)
+    }
+]), asyncHandler (async (req, res) => { // Make the route handler asynchronous
+    console.log("In /register POST");
+    const reVal = await registerUser(req, res); // Await registerUser function
+    console.log(reVal);
+    res.json(reVal)
+    }
+));
 
-export default userRouter
+export { router };

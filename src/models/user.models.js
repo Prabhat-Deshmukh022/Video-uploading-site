@@ -19,7 +19,7 @@ const userSchema = new mongoose.Schema({
         lowecase: true,
         trim: true, 
     },
-    fullName: {
+    fullname: {
         type: String,
         required: true,
         trim: true, 
@@ -34,7 +34,7 @@ const userSchema = new mongoose.Schema({
     },
     watchHistory: [
         {
-            type: Schema.Types.ObjectId,
+            type: mongoose.Schema.Types.ObjectId,
             ref: "Video"
         }
     ],
@@ -51,9 +51,9 @@ const userSchema = new mongoose.Schema({
 userSchema.pre("save", async function(next){
     if(!this.isModified("password")) {return next()}
 
-    salt = bcryptjs.genSaltSync(10);
+    // salt = bcryptjs.genSaltSync(10);
 
-    this.password = await bcryptjs.hash(this.password, salt)
+    this.password = await bcryptjs.hash(this.password, bcryptjs.genSaltSync(10))
     next()
 })
 
@@ -77,7 +77,7 @@ userSchema.methods.accessToken = async function(){
 }
 
 
-userSchema.methods.refreshToken = async function(){
+userSchema.methods.refreshTokenFunc = async function(){
     return await jwt.sign(
         {
             _id: this._id
