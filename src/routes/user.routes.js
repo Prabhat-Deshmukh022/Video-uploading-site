@@ -1,7 +1,8 @@
 import { Router } from "express";
-import {registerUser, loginUser} from "../controllers/user.controller.js";
+import {registerUser, loginUser, logoutUser} from "../controllers/user.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
 import asyncHandler from "../utils/asyncHandler.js";
+import verifyJWT from "../middlewares/auth.middleware.js";
 
 const router = Router()
 
@@ -26,5 +27,11 @@ router.route("/login").post( asyncHandler( async (req,res) => {
     console.log("In /login POST");
     await loginUser(req, res)
 } ) )
+
+router.route("/logout").post( verifyJWT,
+asyncHandler( async (req,res) => {
+    console.log("In /logout POST");
+    await logoutUser(req,res)
+} ))
 
 export { router };
