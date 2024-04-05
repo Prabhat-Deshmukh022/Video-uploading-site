@@ -1,5 +1,5 @@
 import { Router } from "express";
-import registerUser from "../controllers/user.controller.js";
+import {registerUser, loginUser} from "../controllers/user.controller.js";
 import { upload } from "../middlewares/multer.js";
 import asyncHandler from "../utils/asyncHandler.js";
 
@@ -21,5 +21,10 @@ router.route('/register').post(upload.fields([
     res.json(reVal)
     }
 ));
+
+router.route("/login").post( asyncHandler( async (req,res) => {
+    console.log("In /login POST");
+    await loginUser(req, res)
+} ) )
 
 export { router };

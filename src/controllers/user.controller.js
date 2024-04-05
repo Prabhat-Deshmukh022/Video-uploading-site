@@ -4,6 +4,23 @@ import { User } from "../models/user.models.js";
 import {cloudinary_upload} from "../utils/cloudinary.js";
 import ApiResponse from "../utils/ApiResponse.js"
 
+const generateAccessandRefreshTokens = async (userId) => {
+    try {
+        const user = await User.findById(userId)
+
+        const accessToken = user.accessToken()
+        const refreshToken = user.refreshTokenFunc()
+
+        user.refreshToken=refreshToken
+        await user.save()
+
+        return {accessToken, refreshToken}
+
+    } catch (error) {
+        throw new ApiError(400, "Error in access or refresh token generation")
+    }
+}
+
 const registerUser = asyncHandler( async (req,res) => {
     console.log("In registerUser");
     const {fullname, email, username, password} = req.body
@@ -64,6 +81,58 @@ const registerUser = asyncHandler( async (req,res) => {
 
 } )
 
-export default registerUser
 
 // if ( [].some( (field) => field.trim("") === "" ) ){ throw new ApiError(400, "Please fill all fields") }
+
+const loginUser = asyncHandler( async (req,res) => {
+    const {username, password, email} = req.body
+    console.log("In loginUser");
+    console.log("LOG - ", req.body);
+    console.log("Username, Email and Password - ", username, password, email);
+
+    if(!username || !email){
+        // console.log("IN EXCEPTION 1");
+        throw new ApiError(400, "Username or Email not entered")
+    }
+    // console.log("JUST OUTSIDE EXCEPTION 1");
+
+    const user = await User.findOne({
+        $or:[{username}, {email}]
+    })
+
+    // console.log("User obtained - ", user);
+
+    if (!user) {    
+        // console.log("404 user not found");
+        throw new ApiError(404, "User not found")
+    }
+
+    const isPasswordValid = await user.isPasswordCorrect(password)
+
+    if(!isPasswordValid){
+        throw new ApiError(400, "Entered password incorrect!")
+    }
+
+    const {accessToken, refreshToken} = await generateAccessandRefreshTokens(user._id)
+
+    const loggedInUser = await User.findById(user._id).select("-password -refreshToken")
+
+    const options = 
+    {
+        httpOnly: true,
+        secure: true
+    }
+
+    res.
+    status(200)
+    .cookie("accessToken", accessToken, options)
+    .cookie("refreshToken", refreshToken, options)
+    .json(loggedInUser)
+
+} )
+
+const logoutUser = asyncHandler( async(req,res) => {
+
+} )
+
+export {loginUser, registerUser, logoutUser}

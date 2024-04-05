@@ -27,7 +27,7 @@ app.use(cookieParser()) //cookieParser() populates req.cookies, which will be av
 // ----------------------------------------------------------------------------------------------------------------
 
 import {router} from "./routes/user.routes.js";
-import registerUser from "./controllers/user.controller.js";
+import {registerUser, loginUser} from "./controllers/user.controller.js";
 import { upload } from "./middlewares/multer.js";
 
 app.use("/api", router)

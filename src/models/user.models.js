@@ -78,7 +78,7 @@ userSchema.methods.accessToken = async function(){
 
 
 userSchema.methods.refreshTokenFunc = async function(){
-    return await jwt.sign(
+    return jwt.sign(
         {
             _id: this._id
         },
