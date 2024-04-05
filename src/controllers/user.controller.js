@@ -8,8 +8,8 @@ const generateAccessandRefreshTokens = async (userId) => {
     try {
         const user = await User.findById(userId)
 
-        const accessToken = user.accessToken()
-        const refreshToken = user.refreshTokenFunc()
+        const accessToken = await user.accessToken()
+        const refreshToken = await user.refreshTokenFunc()
 
         user.refreshToken=refreshToken
         await user.save()
@@ -91,19 +91,19 @@ const loginUser = asyncHandler( async (req,res) => {
     console.log("Username, Email and Password - ", username, password, email);
 
     if(!username || !email){
-        // console.log("IN EXCEPTION 1");
+        console.log("IN EXCEPTION 1");
         throw new ApiError(400, "Username or Email not entered")
     }
-    // console.log("JUST OUTSIDE EXCEPTION 1");
+    console.log("JUST OUTSIDE EXCEPTION 1");
 
     const user = await User.findOne({
         $or:[{username}, {email}]
     })
 
-    // console.log("User obtained - ", user);
+    console.log("User obtained - ", user);
 
     if (!user) {    
-        // console.log("404 user not found");
+        console.log("404 user not found");
         throw new ApiError(404, "User not found")
     }
 
@@ -114,8 +114,11 @@ const loginUser = asyncHandler( async (req,res) => {
     }
 
     const {accessToken, refreshToken} = await generateAccessandRefreshTokens(user._id)
+    console.log(accessToken, refreshToken);
 
     const loggedInUser = await User.findById(user._id).select("-password -refreshToken")
+
+    // console.log("LOGGED IN USER - ", loggedInUser);
 
     const options = 
     {
