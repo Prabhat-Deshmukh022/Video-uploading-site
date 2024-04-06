@@ -1,5 +1,5 @@
 import { Router } from "express";
-import {registerUser, loginUser, logoutUser} from "../controllers/user.controller.js";
+import {registerUser, loginUser, logoutUser, refreshAccessToken, changePassword, getCurrentUser, updateUserInfo, updateAvatar} from "../controllers/user.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
 import asyncHandler from "../utils/asyncHandler.js";
 import verifyJWT from "../middlewares/auth.middleware.js";
@@ -33,5 +33,33 @@ asyncHandler( async (req,res) => {
     console.log("In /logout POST");
     await logoutUser(req,res)
 } ))
+
+router.route("/refresh").post( asyncHandler ( async (req,res) => {
+    console.log("In refresh /POST");
+    await refreshAccessToken(req,res)
+} ) )
+
+router.route("/changePassword").post( verifyJWT, asyncHandler( async (req,res) => {
+    console.log("In /changePassword POST");
+    await changePassword(req,res)
+} ) )
+
+router.route("/getUser").get( verifyJWT, asyncHandler( async (req,res) => {
+    console.log("In /getUser GET");
+    await getCurrentUser(req,res)
+} ) )
+
+router.route("/updateUser").post(verifyJWT, 
+asyncHandler( async (req,res) => {
+    console.log("In /updateUser POST");
+    await updateUserInfo(req,res)
+} ))
+
+router.route("/updateAvatar").post(verifyJWT, upload.single("avatar"), 
+asyncHandler( async (req,res) => {
+    console.log("In /updateAvatar");
+    await updateAvatar(req,res)
+} )
+)
 
 export { router };

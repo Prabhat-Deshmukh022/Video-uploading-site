@@ -24,6 +24,7 @@ const verifyJWT = asyncHandler( async (req,res,next) => {
             throw new ApiError(404, "User has not been found")
         }
 
+
         req.user = user
         next()
     }
