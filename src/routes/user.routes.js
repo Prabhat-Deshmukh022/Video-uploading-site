@@ -72,5 +72,4 @@ router.route("/history").get(verifyJWT, asyncHandler( async (req,res) => {
     await watchHistory(req,res)
 } ))
 
-
 export { router };
