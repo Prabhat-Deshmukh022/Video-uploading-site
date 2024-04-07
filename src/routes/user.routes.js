@@ -1,5 +1,5 @@
 import { Router } from "express";
-import {registerUser, loginUser, logoutUser, refreshAccessToken, changePassword, getCurrentUser, updateUserInfo, updateAvatar} from "../controllers/user.controller.js";
+import {registerUser, loginUser, logoutUser, refreshAccessToken, changePassword, getCurrentUser, updateUserInfo, updateAvatar, getChannels, watchHistory} from "../controllers/user.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
 import asyncHandler from "../utils/asyncHandler.js";
 import verifyJWT from "../middlewares/auth.middleware.js";
@@ -49,17 +49,28 @@ router.route("/getUser").get( verifyJWT, asyncHandler( async (req,res) => {
     await getCurrentUser(req,res)
 } ) )
 
-router.route("/updateUser").post(verifyJWT, 
+router.route("/updateUser").patch(verifyJWT, 
 asyncHandler( async (req,res) => {
     console.log("In /updateUser POST");
     await updateUserInfo(req,res)
 } ))
 
-router.route("/updateAvatar").post(verifyJWT, upload.single("avatar"), 
+router.route("/updateAvatar").patch(verifyJWT, upload.single("avatar"), 
 asyncHandler( async (req,res) => {
     console.log("In /updateAvatar");
     await updateAvatar(req,res)
 } )
 )
+
+router.route("/c/:username").get(verifyJWT, asyncHandler( async (req,res) => {
+    console.log("In /c/:username\n");
+    await getChannels(req,res)
+} ))
+
+router.route("/history").get(verifyJWT, asyncHandler( async (req,res) => {
+    console.log("In /history POST");
+    await watchHistory(req,res)
+} ))
+
 
 export { router };
