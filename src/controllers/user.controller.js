@@ -394,6 +394,7 @@ const videoUpload = asyncHandler( async (req,res) => {
 
     if(!title && !description){
         console.log("Require title and description");
+        throw new ApiError(404, "Title or description required!")
     }
 
     const videoFile = await cloudinary_upload(video)
