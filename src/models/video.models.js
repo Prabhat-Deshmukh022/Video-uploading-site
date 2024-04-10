@@ -1,3 +1,5 @@
+//Have made duration not required, uncomment it
+
 import mongoose, {Schema} from "mongoose";
 import mongooseAggregatePaginate from "mongoose-aggregate-paginate-v2";
 
@@ -21,7 +23,7 @@ const videoSchema = new Schema(
         },
         duration: {
             type: Number, //from cloudinary
-            required: true
+            // required: true
         },
         views: {
             type: Number,
@@ -34,6 +36,9 @@ const videoSchema = new Schema(
         owner: {
             type: Schema.Types.ObjectId,
             ref: "User"
+        },
+        username: {
+            type: String,
         }
     }, 
     {

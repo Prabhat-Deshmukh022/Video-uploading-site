@@ -1,5 +1,5 @@
 import { Router } from "express";
-import {registerUser, loginUser, logoutUser, refreshAccessToken, changePassword, getCurrentUser, updateUserInfo, updateAvatar, getChannels, watchHistory} from "../controllers/user.controller.js";
+import {registerUser, loginUser, logoutUser, refreshAccessToken, changePassword, getCurrentUser, updateUserInfo, updateAvatar, getChannels, watchHistory, videoUpload} from "../controllers/user.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
 import asyncHandler from "../utils/asyncHandler.js";
 import verifyJWT from "../middlewares/auth.middleware.js";
@@ -55,7 +55,7 @@ asyncHandler( async (req,res) => {
     await updateUserInfo(req,res)
 } ))
 
-router.route("/updateAvatar").patch(verifyJWT, upload.single("avatar"), 
+router.route("/updateAvatar").post(verifyJWT, upload.single("avatar"), 
 asyncHandler( async (req,res) => {
     console.log("In /updateAvatar");
     await updateAvatar(req,res)
@@ -70,6 +70,22 @@ router.route("/c/:username").get(verifyJWT, asyncHandler( async (req,res) => {
 router.route("/history").get(verifyJWT, asyncHandler( async (req,res) => {
     console.log("In /history POST");
     await watchHistory(req,res)
+} ))
+
+router.route("/videoUpload").post(verifyJWT, upload.fields([
+    {
+        name: "video",
+        maxCount: 1
+    },
+    {
+        name: "thumbnail",
+        maxCount: 1
+    }
+]), 
+
+asyncHandler( async(req,res) => {
+    console.log("In /videoUpload POST");
+    await videoUpload(req,res);
 } ))
 
 export { router };
