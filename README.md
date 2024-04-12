@@ -1,26 +1,21 @@
-# Nodejs_BackendProject
+This project implements the backend for a video uploading website built with Node.js and MongoDB. It offers functionalities for user management, video management (assumed to be implemented elsewhere), and basic user interactions.
 
-DATABASE CONNECTION (troubleshooting) -
+**Features**
+  **User Management:**
+    1.User registration with email and password.
+    2. Login and logout with JWT (JSON Web Token) based authentication.
+    3. User profile management including avatar and cover image upload.
+    4. User information update.
+  **Social Features (using MongoDB Aggregation):**
+    1. Track watch history for users.
+    2. Manage user subscriptions (follow/unfollow).
 
-1. Run using nodemon
-2. Use this connection string only: mongodb://127.0.0.1:27017
-3. If all else fails, ensure MongoDB service is running and its binaries have been uploaded to PATH and retry 1. and 2.
+**Dependencies:**
+Node.js and npm 
+MongoDB
+(please check package.json for further dependencies)
 
-APP CONFIGURATION -
-
-1. npm i cors cookie-parser
-2. use the method cookieParser() on its own and not express.cookieParser()
-3. Set environment variable CORS = \* (for now)
-4. Async handler in utils ie
-
-const asyncHandler = (fn) = async (req,res,next) => {
-try{
-await fn(req,res,next)
-}
-catch(err){
-res.status(err.code).json({
-success: false,
-message: err.message
-})
-}
-}
+**Inmportant concepts implemented:**
+1. User authentication using JWT
+2. Handling the upload of images and videos using cloudinary
+3. Tracking watch history and subscriber count using mongodb aggregation pipelines
