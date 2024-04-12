@@ -6,6 +6,7 @@ import {cloudinary_upload} from "../utils/cloudinary.js";
 import ApiResponse from "../utils/ApiResponse.js"
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
+import { v2 as cloudinary } from "cloudinary";
 
 const generateAccessandRefreshTokens = async (userId) => {
     try {
@@ -399,11 +400,21 @@ const videoUpload = asyncHandler( async (req,res) => {
 
     const videoFile = await cloudinary_upload(video)
     const thumbnailFile = await cloudinary_upload(thumbnail)
-    console.log("Cloudinary video and thumbnail file - ", videoFile, thumbnailFile);
+    console.log("Cloudinary video and thumbnail file - ", videoFile.secure_url, thumbnailFile.secure_url);
+
+    try {
+        const videoDetails = await cloudinary.api.resource(videoFile.public_id, {
+            resource_type: 'video'
+        });
+        // console.log('Video details:', videoDetails);
+        // Extract duration and other information from videoDetails
+    } catch (error) {
+        console.error('Error fetching video details:', error);
+    }
 
     const videoCreated = await Video.create({
-        videoFile: videoFile,
-        thumbnail: thumbnailFile,
+        videoFile: videoFile.secure_url,
+        thumbnail: thumbnailFile.secure_url,
         title: title,
         description: description,
         owner: user._id,

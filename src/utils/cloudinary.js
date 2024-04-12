@@ -12,11 +12,16 @@ const cloudinary_upload = async (filePath) => {
         if(!filePath) return null
 
         const cloud = await cloudinary.uploader.upload(filePath, {
-            resource_type: "auto"
+            resource_type: "auto",
+            image_metadata: true
         })
         console.log("Successfully uploaded - ", cloud.url);
         fs.unlinkSync(filePath)
-        return cloud.secure_url 
+        return {
+            secure_url: cloud.secure_url,
+            public_id: cloud.public_id,
+            duration: cloud?.vid_info?.duration // Access duration from upload response
+        };
     }
     catch (error) {
         fs.unlinkSync(filePath) //if upload fails we remove it from our local system
