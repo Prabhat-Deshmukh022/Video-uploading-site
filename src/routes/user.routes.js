@@ -1,5 +1,5 @@
 import { Router } from "express";
-import {registerUser, loginUser, logoutUser, refreshAccessToken, changePassword, getCurrentUser, updateUserInfo, updateAvatar, getChannels, watchHistory, videoUpload} from "../controllers/user.controller.js";
+import {registerUser, loginUser, logoutUser, refreshAccessToken, changePassword, getCurrentUser, updateUserInfo, updateAvatar, getChannels, watchHistory, videoUpload, deleteUser, deleteVideo} from "../controllers/user.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
 import asyncHandler from "../utils/asyncHandler.js";
 import verifyJWT from "../middlewares/auth.middleware.js";
@@ -87,5 +87,15 @@ asyncHandler( async(req,res) => {
     console.log("In /videoUpload POST");
     await videoUpload(req,res);
 } ))
+
+router.route("/deleteUser").delete(verifyJWT, asyncHandler( async (req,res) => {
+    console.log("In /deleteUser DELETE");
+    await deleteUser(req,res)
+} ))
+
+router.route("/videoDelete").delete(verifyJWT, asyncHandler( asyncHandler( async (req,res) => {
+    console.log("In /videoDelete DELETE");
+    await deleteVideo(req,res)
+} ) ))
 
 export { router };

@@ -7,6 +7,7 @@ import ApiResponse from "../utils/ApiResponse.js"
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 import { v2 as cloudinary } from "cloudinary";
+import bcryptjs from "bcryptjs";
 
 const generateAccessandRefreshTokens = async (userId) => {
     try {
@@ -402,15 +403,15 @@ const videoUpload = asyncHandler( async (req,res) => {
     const thumbnailFile = await cloudinary_upload(thumbnail)
     console.log("Cloudinary video and thumbnail file - ", videoFile.secure_url, thumbnailFile.secure_url);
 
-    try {
-        const videoDetails = await cloudinary.api.resource(videoFile.public_id, {
-            resource_type: 'video'
-        });
-        // console.log('Video details:', videoDetails);
-        // Extract duration and other information from videoDetails
-    } catch (error) {
-        console.error('Error fetching video details:', error);
-    }
+    // try {
+    //     const videoDetails = await cloudinary.api.resource(videoFile.public_id, {
+    //         resource_type: 'video'
+    //     });
+    //     // console.log('Video details:', videoDetails);
+    //     // Extract duration and other information from videoDetails
+    // } catch (error) {
+    //     console.error('Error fetching video details:', error);
+    // }
 
     const videoCreated = await Video.create({
         videoFile: videoFile.secure_url,
@@ -432,4 +433,69 @@ const videoUpload = asyncHandler( async (req,res) => {
     .json(videoCreated)
 } )
 
-export {loginUser, registerUser, logoutUser, refreshAccessToken, changePassword, getCurrentUser, updateUserInfo, updateAvatar, getChannels, watchHistory, videoUpload}
+const deleteUser = asyncHandler( async (req,res) => {
+    const user = req.user
+    console.log("User logged in - ", user);
+
+    const {username, email, password} = req.body
+    console.log("User current info received - ", username, email, password);
+
+    if (!(username === user.username) && !(email === user.email) && !(bcryptjs.compare(password, user.password))) {
+        console.log("User info wrong, cannot delete user!");
+        message = {"Error": "User info wrong"}
+        return res.status(400).json(message)
+    }
+
+    const toDelUser = await User.findByIdAndDelete(req.user._id)
+
+    if (!toDelUser) {
+        console.log("Could not delete user!");
+        message = {"Error": "Could not delete user!"}
+        return res.status(500).json(message)
+    }
+
+    console.log("Deleted user - ", toDelUser);
+
+    return res
+    .status(200)
+    .json(toDelUser)
+} )
+
+const deleteVideo = asyncHandler( async (req,res) => {
+    const user = req.user
+    console.log("User is ", user.username);
+
+    const pipeline = [
+        {
+          $match: {
+            username: user.username
+          }
+        }
+      ]
+
+    const videoList = await Video.aggregate(pipeline)
+    
+    const {videoTitle} = req.body
+    console.log("Video title ", videoTitle);
+
+    let deletedVideo; // Declare outside the loop
+
+    for (let item of videoList) {
+        console.log("ITEM - ", item._id);
+        if (videoTitle === item.title) {
+            deletedVideo = await Video.findByIdAndDelete(item._id);
+            // Break the loop if you only want to delete one video per request
+            break;
+        }
+    }
+    
+    console.log(deletedVideo);
+    
+    return res
+    .status(200)
+    .json(deletedVideo)
+})
+
+export {loginUser, registerUser, logoutUser, refreshAccessToken, changePassword, 
+    getCurrentUser, updateUserInfo, updateAvatar, getChannels, watchHistory, videoUpload
+        ,deleteUser, deleteVideo}
