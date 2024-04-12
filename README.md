@@ -26,7 +26,7 @@ This project implements the backend for a video uploading website built with Nod
 
 (please check package.json for further dependencies)
 
-**Inmportant concepts implemented:**
+**Important concepts implemented:**
 1. User authentication using JWT
 2. Handling the upload of images and videos using cloudinary
 3. Tracking watch history and subscriber count using mongodb aggregation pipelines
