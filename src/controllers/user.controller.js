@@ -8,6 +8,7 @@ import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 import { v2 as cloudinary } from "cloudinary";
 import bcryptjs from "bcryptjs";
+import { Playlist } from "../models/playlist.models.js";
 
 const generateAccessandRefreshTokens = async (userId) => {
     try {
@@ -69,8 +70,8 @@ const registerUser = asyncHandler( async (req,res) => {
         fullname,
         username,
         email,
-        avatar: avatar,
-        coverImage: coverImage?.url || "",
+        avatar: avatar.secure_url,
+        coverImage: coverImage?.secure_url || "",
         password
     })
 
@@ -82,7 +83,11 @@ const registerUser = asyncHandler( async (req,res) => {
         throw new ApiError(500, "User has not been created!")
     }
 
-    return new ApiResponse("Registered!", 201, checkUser)
+    console.log("Check user - ", checkUser);
+
+    return res
+    .status(200)
+    .json(checkUser)
 
 } )
 
@@ -274,6 +279,7 @@ const updateAvatar = asyncHandler( async (req,res) => {
 const getChannels = asyncHandler( async (req,res) => {
 
     const username = req.params.username
+    console.log("Username - ", username);
     if(!username){
         console.log("Username not received!");
     }
@@ -323,6 +329,8 @@ const getChannels = asyncHandler( async (req,res) => {
             isSubscribed: 1
         }
     }])
+
+    console.log("Channels - ", channels);
 
     if (!channels) {
         console.log("Channels does not exist!");
@@ -496,6 +504,52 @@ const deleteVideo = asyncHandler( async (req,res) => {
     .json(deletedVideo)
 })
 
+const playlist = asyncHandler( async (req,res) => {
+    const { videotitle } = req.params;
+    const {name, description} = req.body
+    const user = req.user
+    console.log(name, description);
+
+    if(!(name && description)){
+        return res.status(500).send("Please enter name and description!")
+    }
+
+    // Trim the videotitle to remove any leading/trailing spaces
+    let trimmedTitle = videotitle.trim();
+    trimmedTitle = trimmedTitle.substring(1)
+    console.log(trimmedTitle);
+
+    // const checkOne = await Playlist.findOne({name: name})
+
+    // if(checkOne){
+    //     console.log("Names of two playlists cannot be same!");
+    //     return res.status(500).send("Name of two playlists cannot be same")
+    // }
+
+    const video = await Video.findOne({ title: trimmedTitle });
+    console.log("Found Video:", video._id);
+
+    let playlist = await Playlist.findOne({name: name})
+
+    if(!playlist){
+        playlist = await Playlist.create({
+        name: name,
+        description:description,
+        owner: user._id    
+        })
+    }
+
+    playlist.videos.push(video._id)
+    playlist.description = description
+    await playlist.save()
+
+    console.log(playlist);
+
+    return res.
+    status(200)
+    .json(playlist)
+} )
+
 export {loginUser, registerUser, logoutUser, refreshAccessToken, changePassword, 
     getCurrentUser, updateUserInfo, updateAvatar, getChannels, watchHistory, videoUpload
-        ,deleteUser, deleteVideo}
+        ,deleteUser, deleteVideo, playlist}
