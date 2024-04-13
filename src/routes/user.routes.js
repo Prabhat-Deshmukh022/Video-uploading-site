@@ -1,5 +1,6 @@
 import { Router } from "express";
-import {registerUser, loginUser, logoutUser, refreshAccessToken, changePassword, getCurrentUser, updateUserInfo, updateAvatar, getChannels, watchHistory, videoUpload, deleteUser, deleteVideo, playlist} from "../controllers/user.controller.js";
+import {registerUser, loginUser, logoutUser, refreshAccessToken, changePassword, getCurrentUser, updateUserInfo, updateAvatar, getChannels, watchHistory, videoUpload, deleteUser, deleteVideo} from "../controllers/user.controller.js";
+import {getUserPlaylist, playlist} from "../controllers/playlist.controller.js"
 import { upload } from "../middlewares/multer.middleware.js";
 import asyncHandler from "../utils/asyncHandler.js";
 import verifyJWT from "../middlewares/auth.middleware.js";
@@ -98,7 +99,7 @@ router.route("/videoDelete").delete(verifyJWT, asyncHandler( asyncHandler( async
     await deleteVideo(req,res)
 } ) ))
 
-router.route("/c/:videotitle").post( verifyJWT, asyncHandler( async (req,res) => {
+router.route("/p/:videotitle").post( verifyJWT, asyncHandler( async (req,res) => {
     console.log("In /playlist POST");
     await playlist(req,res)
 } ) )
