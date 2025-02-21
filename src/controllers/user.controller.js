@@ -32,63 +32,76 @@ const registerUser = asyncHandler( async (req,res) => {
     const {fullname, email, username, password} = req.body
     console.log("REQ.BODY - ",fullname, email, username, password)
 
-    if(
-        [fullname, email, username, password].some( (field) => 
-            field.trim() === ""
-        ) 
-    ){
-        // console.log("FIELD - ", field);
-        throw new ApiError(400, `All fields need to be filled !`)
+    try {
+        if(
+            [fullname, email, username, password].some( (field) => 
+                field.trim() === ""
+            ) 
+        ){
+            // console.log("FIELD - ", field);
+            throw new ApiError(400, `All fields need to be filled !`)
+        }
+    
+        console.log("Before await ");
+        const user = await User.findOne({
+            $or: [{email},{username}]
+        })
+        console.log(`After finding user`);
+    
+        if(user){
+            throw new ApiError(409, "User already exists!")
+        }
+    
+        const avatarPath = req?.files?.avatar[0]?.path 
+        const coverImagePath = req?.files?.coverImage
+    
+        console.log("Avatar path - ", avatarPath);
+
+        const coverImage=null;
+
+        if(coverImagePath !== undefined){
+            coverImage = await cloudinary_upload(coverImagePath)
+        }
+    
+        if(!avatarPath){
+            throw new ApiError(400, "Avatar is required!")
+        }
+        const avatar = await cloudinary_upload(avatarPath)
+        console.log("Avatar cloudinary - ", avatar);
+    
+        if(!avatar){
+            throw new ApiError(400, "Avatar not uploaded!")
+        }
+    
+        const userCreated = await User.create({
+            fullname,
+            username,
+            email,
+            avatar: avatar.secure_url,
+            coverImage: coverImage?.secure_url || "",
+            password
+        })
+    
+        console.log("User - ", userCreated);
+    
+        const checkUser = await User.findById(userCreated._id).select("-password -refreshToken")
+    
+        if(!checkUser){
+            throw new ApiError(500, "User has not been created!")
+        }
+    
+        console.log("Check user - ", checkUser);
+    
+        return res
+        .status(200)
+        .json(checkUser)
+    
+    } catch (error) {
+        console.log(`REGISTER USER ERROR ${error}`);
+        return res
+        .status(400)
+        .json({message:error})
     }
-
-    console.log("Before await ");
-    const user = await User.findOne({
-        $or: [{email},{username}]
-    })
-
-    if(user){
-        throw new ApiError(409, "User already exists!")
-    }
-
-    const avatarPath = req?.files?.avatar[0]?.path 
-    const coverImagePath = req?.files?.coverImage[0]?.path
-
-    console.log("Avatar path - ", avatarPath);
-
-    if(!avatarPath){
-        throw new ApiError(400, "Avatar is required!")
-    }
-    const avatar = await cloudinary_upload(avatarPath)
-    console.log("Avatar cloudinary - ", avatar);
-    const coverImage = await cloudinary_upload(coverImagePath)
-
-    if(!avatar){
-        throw new ApiError(400, "Avatar not uploaded!")
-    }
-
-    const userCreated = await User.create({
-        fullname,
-        username,
-        email,
-        avatar: avatar.secure_url,
-        coverImage: coverImage?.secure_url || "",
-        password
-    })
-
-    console.log("User - ", userCreated);
-
-    const checkUser = await User.findById(userCreated._id).select("-password -refreshToken")
-
-    if(!checkUser){
-        throw new ApiError(500, "User has not been created!")
-    }
-
-    console.log("Check user - ", checkUser);
-
-    return res
-    .status(200)
-    .json(checkUser)
-
 } )
 
 
@@ -100,49 +113,56 @@ const loginUser = asyncHandler( async (req,res) => {
     console.log("LOG - ", req.body);
     console.log("Username, Email and Password - ", username, password, email);
 
-    if(!username || !email){
-        console.log("IN EXCEPTION 1");
-        throw new ApiError(400, "Username or Email not entered")
+    try {
+            if(!username || !email){
+                console.log("IN EXCEPTION 1");
+                throw new ApiError(400, "Username or Email not entered")
+            }
+            console.log("JUST OUTSIDE EXCEPTION 1");
+        
+            const user = await User.findOne({
+                $or:[{username}, {email}]
+            })
+        
+            console.log("User obtained - ", user);
+        
+            if (!user) {    
+                console.log("404 user not found");
+                throw new ApiError(404, "User not found")
+            }
+        
+            const isPasswordValid = await user.isPasswordCorrect(password)
+        
+            if(!isPasswordValid){
+                console.log("PASS WORD NOT");
+                throw new ApiError(401, "Entered password incorrect!")
+            }
+        
+            const {accessToken, refreshToken} = await generateAccessandRefreshTokens(user._id)
+            console.log(accessToken, refreshToken);
+        
+            const loggedInUser = await User.findById(user._id).select("-password -refreshToken")
+        
+            console.log("LOGGED IN USER - ", loggedInUser);
+        
+            const options = 
+            {
+                httpOnly: true,
+                secure: true
+            }
+        
+            res.
+            status(200)
+            .cookie("accessToken", accessToken, options)
+            .cookie("refreshToken", refreshToken, options)
+            .json(loggedInUser)
+        
+    } catch (error) {
+        console.log(`Caught error ${error}`);
+        return res
+        .status(404)
+        .json({message:"Wrong Details! No login"})
     }
-    console.log("JUST OUTSIDE EXCEPTION 1");
-
-    const user = await User.findOne({
-        $or:[{username}, {email}]
-    })
-
-    console.log("User obtained - ", user);
-
-    if (!user) {    
-        console.log("404 user not found");
-        throw new ApiError(404, "User not found")
-    }
-
-    const isPasswordValid = await user.isPasswordCorrect(password)
-
-    if(!isPasswordValid){
-        console.log("PASS WORD NOT");
-        throw new ApiError(401, "Entered password incorrect!")
-    }
-
-    const {accessToken, refreshToken} = await generateAccessandRefreshTokens(user._id)
-    console.log(accessToken, refreshToken);
-
-    const loggedInUser = await User.findById(user._id).select("-password -refreshToken")
-
-    console.log("LOGGED IN USER - ", loggedInUser);
-
-    const options = 
-    {
-        httpOnly: true,
-        secure: true
-    }
-
-    res.
-    status(200)
-    .cookie("accessToken", accessToken, options)
-    .cookie("refreshToken", refreshToken, options)
-    .json(loggedInUser)
-
 } )
 
 const logoutUser = asyncHandler( async(req,res) => {
@@ -187,7 +207,7 @@ const refreshAccessToken = asyncHandler( async (req,res) => {
     }
 
     if (incomingRefreshToken !== user?.refreshToken) {
-        console.log("WROMG TOKEN");
+        console.log("WRONG TOKEN");
         throw new ApiError(401, "Wrong token")
     }
 
@@ -386,61 +406,6 @@ const watchHistory = asyncHandler( async (req,res) => {
 
 } )
 
-const videoUpload = asyncHandler( async (req,res) => {
-    const user = req.user
-    console.log("User is logged in - ", user.username);
-
-    const video = req?.files?.video[0].path
-    const thumbnail = req?.files?.thumbnail[0].path
-    console.log("Video and thumbnail path is - ",video, thumbnail);
-
-    if(!video && !thumbnail){
-        console.log("Require video and thumbnail!");
-        // throw new ApiError()
-    }
-
-    const {title, description} = req.body
-    console.log("Body - ", title, description);
-
-    if(!title && !description){
-        console.log("Require title and description");
-        throw new ApiError(404, "Title or description required!")
-    }
-
-    const videoFile = await cloudinary_upload(video)
-    const thumbnailFile = await cloudinary_upload(thumbnail)
-    console.log("Cloudinary video and thumbnail file - ", videoFile.secure_url, thumbnailFile.secure_url);
-
-    // try {
-    //     const videoDetails = await cloudinary.api.resource(videoFile.public_id, {
-    //         resource_type: 'video'
-    //     });
-    //     // console.log('Video details:', videoDetails);
-    //     // Extract duration and other information from videoDetails
-    // } catch (error) {
-    //     console.error('Error fetching video details:', error);
-    // }
-
-    const videoCreated = await Video.create({
-        videoFile: videoFile.secure_url,
-        thumbnail: thumbnailFile.secure_url,
-        title: title,
-        description: description,
-        owner: user._id,
-        username: user.username
-    })
-
-    console.log(videoCreated);
-
-    if(!videoCreated){
-        console.log("ERROR IN DB");
-    }
-
-    return res
-    .status(200)
-    .json(videoCreated)
-} )
-
 const deleteUser = asyncHandler( async (req,res) => {
     const user = req.user
     console.log("User logged in - ", user);
@@ -469,41 +434,6 @@ const deleteUser = asyncHandler( async (req,res) => {
     .json(toDelUser)
 } )
 
-const deleteVideo = asyncHandler( async (req,res) => {
-    const user = req.user
-    console.log("User is ", user.username);
-
-    const pipeline = [
-        {
-          $match: {
-            username: user.username
-          }
-        }
-      ]
-
-    const videoList = await Video.aggregate(pipeline)
-    
-    const {videoTitle} = req.body
-    console.log("Video title ", videoTitle);
-
-    let deletedVideo; // Declare outside the loop
-
-    for (let item of videoList) {
-        console.log("ITEM - ", item._id);
-        if (videoTitle === item.title) {
-            deletedVideo = await Video.findByIdAndDelete(item._id);
-            // Break the loop if you only want to delete one video per request
-            break;
-        }
-    }
-    
-    console.log(deletedVideo);
-    
-    return res
-    .status(200)
-    .json(deletedVideo)
-})
-
 export {loginUser, registerUser, logoutUser, refreshAccessToken, changePassword, 
-    getCurrentUser, updateUserInfo, updateAvatar, getChannels, watchHistory, videoUpload
-        ,deleteUser, deleteVideo}
+    getCurrentUser, updateUserInfo, updateAvatar, getChannels, watchHistory
+        ,deleteUser}

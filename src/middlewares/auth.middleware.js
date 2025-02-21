@@ -6,7 +6,7 @@ import { User } from "../models/user.models.js";
 const verifyJWT = asyncHandler( async (req,res,next) => {
     try {
         console.log("In verify JWT");
-        const getCookies = req.cookies?.accessToken || req.headers("Authorization")?.replace("Bearer", "")
+        const getCookies = req.cookies?.accessToken || req.headers["Authorization"]?.replace("Bearer", "")
     
         if(!getCookies){
             console.log("IN EXCEPTION 1");
@@ -29,7 +29,10 @@ const verifyJWT = asyncHandler( async (req,res,next) => {
         next()
     }
      catch (error) {
-        console.error(error);
+        console.error("In error!!!!!1!1",error);
+        return res
+        .status(404)
+        .json({message:"No token, No user"})
     } })
 
-export default verifyJWT
+export {verifyJWT}

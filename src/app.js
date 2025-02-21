@@ -24,8 +24,14 @@ app.use(cookieParser()) //cookieParser() populates req.cookies, which will be av
 
 // ----------------------------------------------------------------------------------------------------------------
 
-import {router} from "./routes/user.routes.js";;
+import {userRouter} from "./routes/user.routes.js";
+import { playlistRouter } from "./routes/playlist.routes.js";
+import { videoRouter } from "./routes/video.routes.js";
+import { commentRouter } from "./routes/comment.routes.js";
 
-app.use("/api", router)
+app.use("/api/user/v1", userRouter)
+app.use("/api/playlist/v1", playlistRouter)
+app.use("/api/video/v1", videoRouter)
+app.use("/api/comment/v1", commentRouter)
 
 export default app
