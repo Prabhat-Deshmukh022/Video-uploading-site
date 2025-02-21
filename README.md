@@ -1,5 +1,8 @@
 This project implements the backend for a video uploading website built with Node.js and MongoDB. It offers functionalities for user management, video management, and various user interactions.
 
+**Note**
+Code implemented using the course material provided by the course - Backend Development by Hitesh Choudary (https://www.youtube.com/@chaiaurcode)
+
 **Features**
 
 **User Management:**
